@@ -1,0 +1,16 @@
+{
+  "name": "devconnect-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+     "dev" : "nodemon src/app.js"
+  },
+  "keywords": [],
+  "author": "Muhammed Rafi",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
