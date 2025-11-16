@@ -10,17 +10,54 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     emailId: {
-        type: String
+        type: String,
+        lowercase: true,
+        required: true,
+        unique: true,
+        trim: true,
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error("invalid email added");
+            }
+        }
     },
     password: {
-        type: String
+        type: String,
+        required: true,
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error("Enter a strong password");
+            }
+        }
     },
     age: {
-        type: Number
+        type: Number,
+        min: 18,
     },
     gender: {
-        type: String
-    }
+        type: String,
+        validate(value) {
+            if (!['male', 'female', 'other'].invludes(value)) {
+                throw new Error("Gender is not valid")
+            }
+        }
+    },
+    photoUrl: {
+        type: String,
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error("invalid photo")
+            }
+        }
+    },
+    about: {
+        type: String,
+    },
+    skills: {
+        type: [String]
+    },
+},{
+    timestamps: true,
 });
 
 userSchema.methods.getJWT = async function () {

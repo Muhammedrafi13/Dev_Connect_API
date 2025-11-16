@@ -12,10 +12,12 @@ app.use(CookieParser());
 const auth = require("./routes/auth");
 const profile = require("./routes/profile");
 const request = require("./routes/request");
+const user = require("./routes/user");
 
 app.use("/",auth);
 app.use("/profile",profile);
 app.use("/request",request);
+app.use("/user",user);
 
 
 
