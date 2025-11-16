@@ -8,10 +8,7 @@ const bcrypt = require('bcrypt')
 
 router.get("/view", userAuth, async (req, res) => {
     try {
-
         res.send(req.user);
-
-
     } catch (err) {
         res.status(400).send("Error" + err.message);
     }
