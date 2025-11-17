@@ -11,14 +11,12 @@ router.post("/send/:status/:toUserId", userAuth, async (req, res) => {
         const toUserId = req.params.toUserId;
         const status = req.params.status;
 
-
-
         const isUserIdValid = await User.findById(toUserId)
         if (!isUserIdValid) {
             return res.status(400).send("invalid user");
         }
         const allowedStatus = ["ignored", "interested"];
-        if (!allowedStatus.includes(allowedStatus)) {
+        if (!allowedStatus.includes(status)) {
             return res.status(400).send("status is invalid");
         }
 
@@ -52,7 +50,7 @@ router.post("/send/:status/:toUserId", userAuth, async (req, res) => {
     }
 });
 
-router.post("/request/review/:status/:requestId",userAuth, async (req, res) => {
+router.post("/review/:status/:requestId",userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
         const { status, requestId } = req.params;
@@ -63,7 +61,7 @@ router.post("/request/review/:status/:requestId",userAuth, async (req, res) => {
 
         const connectionRequst = await Request.findOne({
             _id: requestId,
-            staus: 'interested',
+            status: 'interested',
             toUserId: loggedInUser._id
         })
 
@@ -73,12 +71,37 @@ router.post("/request/review/:status/:requestId",userAuth, async (req, res) => {
 
         connectionRequst.status = status;
         const data = await connectionRequst.save();
-        req.json({ message: "request" + status, data })
+        res.json({ message: "request" + status, data })
 
 
     } catch (err) {
         res.status(400).send("error " + err.message)
     }
-})
+});
+
+router.get('/sent/interested', userAuth, async (req, res) => {
+    try {
+        const loggedInUserId = req.user._id;
+        const sentRequests = await Request.find({
+            fromUserId: loggedInUserId,
+            status: 'interested'
+        })
+        .populate('toUserId', 'firstName lastName photoUrl age gender about'); 
+
+        if (!sentRequests || sentRequests.length === 0) {
+            return res.status(200).json({ 
+                message: "No pending requests sent by you.",
+                data: []
+            });
+        }
+        res.json({ 
+            message: "Sent connection requests retrieved successfully.",
+            data: sentRequests
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: "Server error occurred while fetching sent requests." });
+    }
+});
 
 module.exports = router;

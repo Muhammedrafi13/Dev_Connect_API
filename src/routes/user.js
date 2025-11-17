@@ -6,7 +6,7 @@ const User = require("../models/user");
 const router = express.Router();
 
 
-router.get("/user/request/received", userAuth, async (req, res) => {
+router.get("/requests/received", userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
         const connectionRequests = await Request.find({
@@ -23,7 +23,7 @@ router.get("/user/request/received", userAuth, async (req, res) => {
     }
 });
 
-router.get("/user/connections", userAuth, async (req, res) => {
+router.get("/connections", userAuth, async (req, res) => {
     try {
 
         const loggedInUser = req.user;
@@ -32,14 +32,12 @@ router.get("/user/connections", userAuth, async (req, res) => {
                 { toUserId: loggedInUser._id, status: "accepted" },
                 { fromUserId: loggedInUser._id, status: "accepted" }
             ]
-        }).populate("fromUserId", ["firstName", "lastName", "age", "gender", "about", "skills"])
-            .populate("toUserId", ["firstName", "lastName", "age", "gender", "about", "skills"]);
+        }).populate("fromUserId", ["firstName", "lastName", "age", "gender", "about", "skills","photoUrl"])
+            .populate("toUserId", ["firstName", "lastName", "age", "gender", "about", "skills","photoUrl"]);
         const connections = connectionRequests.map((request) => {
-            // If the logged-in user is the recipient (toUserId), return the sender (fromUserId)
             if (request.toUserId._id.equals(loggedInUser._id)) {
                 return request.fromUserId;
             } else {
-                // If the logged-in user is the sender (fromUserId), return the recipient (toUserId)
                 return request.toUserId;
             }
         });
@@ -72,17 +70,17 @@ router.get("/feed", userAuth, async (req, res) => {
         const hideUsersFromFeed = new Set();
 
         connectionRequest.forEach((req) => {
-            hideUsersFromFeed.add(req.fromUserId_id.toString()),
+            hideUsersFromFeed.add(req.fromUserId._id.toString()),
                 hideUsersFromFeed.add(req.toUserId._id.toString())
         });
 
-        const users = await Users.find({
+        const users = await User.find({
             $and: [
                 { _id: { $nin: Array.from(hideUsersFromFeed) } },
                 { _id: { $ne: loggedInUser._id } }
             ],
 
-        }).select("firstName lastName age gender about skills")
+        }).select("firstName lastName photoUrl age gender about skills")
 
 
         res.json({

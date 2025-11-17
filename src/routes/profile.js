@@ -3,6 +3,7 @@ const { userAuth } = require('../middlewares/auth');
 const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt')
+const { validateEditProfileData } = require('../utils/validation');
 
 
 
@@ -25,10 +26,13 @@ router.patch("/edit", userAuth, async (req, res) => {
         Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
         await loggedInUser.save();
 
-        res.send("Edit was successfull")
+        res.json({
+            message: "Edit was succesfull",
+            data: loggedInUser
+        })
 
     } catch (err) {
-        res.status(400).send("Error" + err.message);
+        res.status(400).send("Error " + err.message);
     }
 })
 
@@ -51,7 +55,7 @@ router.patch("/password", userAuth, async (req, res) => {
             });
 
             res.send("password has udpated succesfully")
-        } else{
+        } else {
             throw new Error("passowrd is wrong")
         }
 
@@ -59,5 +63,44 @@ router.patch("/password", userAuth, async (req, res) => {
         res.status(400).send("Error" + err.message);
     }
 })
+
+router.get("/get/:toUserId", userAuth, async (req, res) => {
+    try {
+        const toUserId = req.params.toUserId;
+
+        const targetUser = await User.findById(toUserId).select(
+            "firstName lastName email photoUrl"
+        );
+
+        if (!targetUser) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found."
+            });
+        }
+
+        return res.status(200).send({
+            success: true,
+            user: targetUser
+        });
+
+    } catch (err) {
+        console.error("Error fetching user profile:", err.message);
+
+        if (err.name === 'CastError') {
+            return res.status(400).send({
+                success: false,
+                message: "Invalid user ID format."
+            });
+        }
+
+        res.status(500).send({
+            success: false,
+            message: "Server Error: Could not fetch user profile."
+        });
+    }
+});
+
+
 
 module.exports = router;

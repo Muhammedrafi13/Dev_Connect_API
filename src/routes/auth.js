@@ -20,10 +20,16 @@ router.post("/signup", async (req, res) => {
         });
 
 
-        await user.save();
-        res.send("User Added Succesfully")
+        const savedUser = await user.save();
+        const token = await savedUser.getJWT();
+
+        res.cookie("token", token, {
+            expires: new Date(Date.now() + 8 * 3600000),
+        });
+
+        res.json({ message: "User Added successfully!", data: savedUser });
     } catch (error) {
-        res.send("something went wrong", error)
+        res.status(400).send("Error " + error.message)
     }
 
 
@@ -35,13 +41,12 @@ router.post("/login", async (req, res) => {
         const user = await User.findOne({ emailId: emailId })
         if (!user) {
             throw new Error("Invalid Credentials");
-
         }
         const isPasswordValid = await user.validatePassword(password);
         if (isPasswordValid) {
             const token = await user.getJWT();
 
-            res.cookie("token", token,{
+            res.cookie("token", token, {
                 expires: new Date(Date.now() + 8 * 36000000)
             });
             res.send(user);
@@ -49,12 +54,12 @@ router.post("/login", async (req, res) => {
             throw new Error('Invalid Credentials')
         }
     } catch (err) {
-        res.status(400).send("Error" + err.message)
+        res.status(400).send("Error " + err.message)
     }
 })
 
-router.post("/logout",async(req,res)=>{
-    res.cookie("token",null,{
+router.post("/logout", async (req, res) => {
+    res.cookie("token", null, {
         expires: new Date(Date.now()),
     }).send("Logout Sucessfull");
 })
